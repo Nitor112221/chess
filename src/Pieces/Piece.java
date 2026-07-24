@@ -14,7 +14,7 @@ public abstract class Piece {
         return color;
     }
 
-    public abstract boolean canMove(int row, int col, int row1, int col1, ArrayList<ArrayList<Piece>> field, Piece voidPiece);
+    public abstract boolean canMove(int row, int col, int row1, int col1, ArrayList<ArrayList<Piece>> field);
 
-    public abstract boolean canAttack(int row, int col, int row1, int col1, ArrayList<ArrayList<Piece>> field, Piece voidPiece);
+    public abstract boolean canAttack(int row, int col, int row1, int col1, ArrayList<ArrayList<Piece>> field);
 }

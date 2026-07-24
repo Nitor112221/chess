@@ -9,27 +9,6 @@ public class Board {
     int color = Main.WHITE;
     public ArrayList<ArrayList<Piece>> field = new ArrayList<>(8) {
     };
-    private final Piece voidPiece = new Piece(0) {
-        @Override
-        public String Char() {
-            return "  ";
-        }
-
-        @Override
-        public int getColor() {
-            return 0;
-        }
-
-        @Override
-        public boolean canMove(int row, int col, int row1, int col1, ArrayList<ArrayList<Piece>> field, Piece voidPiece) {
-            return false;
-        }
-
-        @Override
-        public boolean canAttack(int row, int col, int row1, int col1, ArrayList<ArrayList<Piece>> field, Piece voidPiece) {
-            return false;
-        }
-    };
 
     Board() {
         ArrayList<Piece> pieces = new ArrayList<>(Arrays.asList(
@@ -47,10 +26,11 @@ public class Board {
         for (int i = 0; i < 4; i++) {
             ArrayList<Piece> row = new ArrayList<>();
             for (int j = 0; j < 8; j++) {
-                row.add(voidPiece);
+                row.add(null);
             }
             field.add(row);
         }
+
         pieces = new ArrayList<>(Arrays.asList(
                 new Pawn(Main.BLACK), new Pawn(Main.BLACK), new Pawn(Main.BLACK), new Pawn(Main.BLACK),
                 new Pawn(Main.BLACK), new Pawn(Main.BLACK), new Pawn(Main.BLACK), new Pawn(Main.BLACK)
@@ -74,14 +54,15 @@ public class Board {
         if (!Main.correctCoords(row, col) || !Main.correctCoords(row1, col1)) return false;
         if (row == row1 && col == col1) return false;
         Piece piece = field.get(row).get(col);
-        if (piece.equals(voidPiece)) return false;
+        if (piece == null) return false;
         if (piece.getColor() != color) return false;
-        if (field.get(row1).get(col1).equals(voidPiece)) {
-            if (!piece.canMove(row, col, row1, col1, field, voidPiece)) return false;
+        if (field.get(row1).get(col1) == null) {
+            if (!piece.canMove(row, col, row1, col1, field)) return false;
         } else if (field.get(row1).get(col1).getColor() == Main.opponent(piece.getColor())) {
-            if (!piece.canAttack(row, col, row1, col1, field, voidPiece)) return false;
+            if (!piece.canAttack(row, col, row1, col1, field)) return false;
         } else return false;
-        field.get(row).set(col, voidPiece);
+
+        field.get(row).set(col, null);
         Piece p = field.get(row1).get(col1);
         field.get(row1).set(col1, piece);
         if (isCheck(color)) {
@@ -89,6 +70,7 @@ public class Board {
             field.get(row1).set(col1, p);
             return false;
         }
+
         color = Main.opponent(color);
         return true;
     }
@@ -99,17 +81,20 @@ public class Board {
      * то два пробела.
      */
     public String cell(int row, int col) {
-        return field.get(row).get(col).Char();
+        Piece piece = field.get(row).get(col);
+        if (piece != null) return piece.Char();
+        return "  ";
     }
 
     public boolean movAndPromotePawn(int row, int col, int row1, int col1) {
         if (!Main.correctCoords(row, col) || !Main.correctCoords(row1, col1)) return false;
         if (!(field.get(row).get(col) instanceof Pawn)) return false;
-        if (!field.get(row1).get(col1).equals(voidPiece)) {
-            if (!field.get(row).get(col).canAttack(row, col, row1, col1, field, voidPiece)) return false;
-            else if (!field.get(row).get(col).canMove(row, col, row1, col1, field, voidPiece)) return false;
+        if (field.get(row1).get(col1) != null) {
+            if (!field.get(row).get(col).canAttack(row, col, row1, col1, field)) return false;
+            else if (!field.get(row).get(col).canMove(row, col, row1, col1, field)) return false;
         }
         if (!(row1 == 7 || row1 == 0)) return false;
+
         System.out.println("Пешка добралась до края доски");
         System.out.println("Введите 1 символ из списка, чтобы выбрать фигуру для превращения:");
         System.out.println("Q - королева");
@@ -153,39 +138,44 @@ public class Board {
                     continue;
                 }
             }
-            field.get(row).set(col, voidPiece);
+            field.get(row).set(col, null);
             color = Main.opponent(color);
             break;
         }
+
         return true;
     }
 
     public int currentPlayerColor() {
         return color;
     }
+
     public boolean castling0() {
         int row = (currentPlayerColor() == Main.WHITE) ? 0 : 7;
-        if (! (field.get(row).get(4) instanceof King && field.get(row).get(0) instanceof Rook)) return false;
-        if (! (field.get(row).get(4).getColor() == field.get(row).get(0).getColor())) return false;
-        if (! field.get(row).get(0).canMove(row, 0, row, 3, field, voidPiece)) return false;
+        if (!(field.get(row).get(4) instanceof King && field.get(row).get(0) instanceof Rook)) return false;
+        if (!(field.get(row).get(4).getColor() == field.get(row).get(0).getColor())) return false;
+        if (!field.get(row).get(0).canMove(row, 0, row, 3, field)) return false;
+
         Piece rc = field.get(row).get(0);
         Piece kc = field.get(row).get(4);
-        field.get(row).set(0, voidPiece);
-        field.get(row).set(4, voidPiece);
+        field.get(row).set(0, null);
+        field.get(row).set(4, null);
         field.get(row).set(3, rc);
         field.get(row).set(2, kc);
         color = Main.opponent(color);
         return true;
     }
+
     public boolean castling7() {
         int row = (currentPlayerColor() == Main.WHITE) ? 0 : 7;
-        if (! (field.get(row).get(4) instanceof King && field.get(row).get(7) instanceof Rook)) return false;
-        if (! (field.get(row).get(4).getColor() == field.get(row).get(7).getColor())) return false;
-        if (! field.get(row).get(7).canMove(row, 7, row, 5, field, voidPiece)) return false;
+        if (!(field.get(row).get(4) instanceof King && field.get(row).get(7) instanceof Rook)) return false;
+        if (!(field.get(row).get(4).getColor() == field.get(row).get(7).getColor())) return false;
+        if (!field.get(row).get(7).canMove(row, 7, row, 5, field)) return false;
+
         Piece rc = field.get(row).get(7);
         Piece kc = field.get(row).get(4);
-        field.get(row).set(7, voidPiece);
-        field.get(row).set(4, voidPiece);
+        field.get(row).set(7, null);
+        field.get(row).set(4, null);
         field.get(row).set(5, rc);
         field.get(row).set(6, kc);
         color = Main.opponent(color);
@@ -194,46 +184,47 @@ public class Board {
 
     public boolean isCheck(int color) {
         int[] coords = findKing(color);
-        if (is_under_attack(coords[0], coords[1], Main.opponent(color))) return true;
-        return false;
+        return is_under_attack(coords[0], coords[1], Main.opponent(color));
     }
 
     public int[] findKing(int color) {
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
-                if (field.get(i).get(j).getColor() == color && field.get(i).get(j) instanceof King) return new int[] {i, j};
+                if (field.get(i).get(j).getColor() == color && field.get(i).get(j) instanceof King)
+                    return new int[]{i, j};
             }
         }
-        return new int[] {};
+
+        return new int[]{};
     }
 
     public boolean isCheckmate(int color) {
         if (!isCheck(color)) {
             return false; // Если король не находится под шахом, то нет матовой позиции
         }
+
         int[] coords = findKing(color);
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
-                if (!field.get(i).get(j).equals(voidPiece) && field.get(i).get(j).getColor() == color) {
-                    Piece piece = field.get(i).get(j);
-                    for (int x = 0; x < 8; x++) {
-                        for (int y = 0; y < 8; y++) {
-                            if (piece.canMove(i, j, x, y, field, voidPiece)) {
-                                // Попробуйте сделать ход и проверить, остается ли король под шахом
-                                Piece targetPiece = field.get(x).get(y);
-                                field.get(x).set(y, piece);
-                                field.get(i).set(j, voidPiece);
-                                boolean stillInCheck = is_under_attack(coords[0], coords[1], Main.opponent(color));
+                if (!(field.get(i).get(j) != null && field.get(i).get(j).getColor() == color)) continue;
 
-                                // Вернуть фигуры на место
-                                field.get(i).set(j, piece);
-                                field.get(x).set(y, targetPiece);
+                Piece piece = field.get(i).get(j);
+                for (int x = 0; x < 8; x++) {
+                    for (int y = 0; y < 8; y++) {
+                        if (!piece.canMove(i, j, x, y, field)) continue;
+                        // Попробуйте сделать ход и проверить, остается ли король под шахом
+                        Piece targetPiece = field.get(x).get(y);
+                        field.get(x).set(y, piece);
+                        field.get(i).set(j, null);
+                        boolean stillInCheck = is_under_attack(coords[0], coords[1], Main.opponent(color));
 
-                                if (!stillInCheck) {
-                                    System.out.println(i + " " + j + " " + x + " " + y);
-                                    return false; // Найден ход, который убирает шах
-                                }
-                            }
+                        // Вернуть фигуры на место
+                        field.get(i).set(j, piece);
+                        field.get(x).set(y, targetPiece);
+
+                        if (!stillInCheck) {
+                            System.out.println(i + " " + j + " " + x + " " + y);
+                            return false; // Найден ход, который убирает шах
                         }
                     }
                 }
@@ -246,16 +237,14 @@ public class Board {
     public boolean is_under_attack(int row, int col, int color) {
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
-                if (!field.get(i).get(j).equals(voidPiece)) {
-                    Piece piece = field.get(i).get(j);
-                    if (piece.getColor() == color) {
-                        if (piece.canMove(i, j, row, col, field, voidPiece)) {
-                            return true;
-                        }
-                    }
+                if (field.get(i).get(j) == null) continue;
+                Piece piece = field.get(i).get(j);
+                if (piece.getColor() == color && piece.canMove(i, j, row, col, field)) {
+                    return true;
                 }
             }
         }
+
         return false;
     }
 }
