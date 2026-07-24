@@ -53,20 +53,21 @@ public class Board {
     public boolean move_piece(int row, int col, int row1, int col1) {
         if (!Main.correctCoords(row, col) || !Main.correctCoords(row1, col1)) return false;
         if (row == row1 && col == col1) return false;
-        Piece piece = field.get(row).get(col);
-        if (piece == null) return false;
-        if (piece.getColor() != color) return false;
-        if (field.get(row1).get(col1) == null) {
-            if (!piece.canMove(row, col, row1, col1, field)) return false;
-        } else if (field.get(row1).get(col1).getColor() == Main.opponent(piece.getColor())) {
-            if (!piece.canAttack(row, col, row1, col1, field)) return false;
+        Piece piece1 = field.get(row).get(col);
+        if (piece1 == null) return false;
+        if (piece1.getColor() != color) return false;
+        Piece piece2 = field.get(row1).get(col1);
+        if (piece2 == null) {
+            if (!piece1.canMove(row, col, row1, col1, field)) return false;
+        } else if (piece2.getColor() != piece1.getColor()) {
+            if (!piece1.canAttack(row, col, row1, col1, field)) return false;
         } else return false;
 
         field.get(row).set(col, null);
         Piece p = field.get(row1).get(col1);
-        field.get(row1).set(col1, piece);
+        field.get(row1).set(col1, piece1);
         if (isCheck(color)) {
-            field.get(row).set(col, piece);
+            field.get(row).set(col, piece1);
             field.get(row1).set(col1, p);
             return false;
         }
@@ -190,7 +191,8 @@ public class Board {
     public int[] findKing(int color) {
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
-                if (field.get(i).get(j).getColor() == color && field.get(i).get(j) instanceof King)
+                Piece piece = field.get(i).get(j);
+                if (piece instanceof King && piece.getColor() == color)
                     return new int[]{i, j};
             }
         }
@@ -206,9 +208,9 @@ public class Board {
         int[] coords = findKing(color);
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
-                if (!(field.get(i).get(j) != null && field.get(i).get(j).getColor() == color)) continue;
-
                 Piece piece = field.get(i).get(j);
+                if (!(piece != null && piece.getColor() == color)) continue;
+
                 for (int x = 0; x < 8; x++) {
                     for (int y = 0; y < 8; y++) {
                         if (!piece.canMove(i, j, x, y, field)) continue;

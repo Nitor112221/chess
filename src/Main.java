@@ -64,7 +64,7 @@ public class Main {
                     }
                     if (board.movAndPromotePawn(row, col, row1, col1) || board.move_piece(row, col, row1, col1)) {
                         System.out.println("Ход успешен");
-                    } else System.out.println("Ход говно, координаты не корректны! Попробуйте другой ход!");
+                    } else System.out.println("Плохой ход, координаты не корректны! Попробуйте другой ход!");
                 }
                 case "castling0" -> {
                     if (board.castling0()) {
